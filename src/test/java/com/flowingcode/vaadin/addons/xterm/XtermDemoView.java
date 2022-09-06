@@ -24,6 +24,7 @@ import com.flowingcode.vaadin.addons.GithubLink;
 import com.flowingcode.vaadin.addons.xterm.ITerminalClipboard.UseSystemClipboard;
 import com.flowingcode.vaadin.addons.xterm.ITerminalOptions.BellStyle;
 import com.flowingcode.vaadin.addons.xterm.ITerminalOptions.CursorStyle;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import java.time.LocalDate;
@@ -36,14 +37,17 @@ import java.time.temporal.ChronoUnit;
 @GithubLink("https://github.com/FlowingCode/XTermConsoleAddon")
 public class XtermDemoView extends VerticalLayout {
 
-  private XTerm xterm;
+  private XTerm baseXterm;
+  private Button hideButton;
 
   public XtermDemoView() {
     setSizeFull();
     setPadding(false);
     getElement().getStyle().set("background", "black");
 
-    xterm = new XTerm();
+
+    baseXterm = new XTerm();
+    PreserveStateAddon xterm = new PreserveStateAddon(baseXterm);
     xterm.setPrompt("[user@xterm ~]$ ");
 
     xterm.writeln("xterm add-on by Flowing Code S.A.\n\n");
@@ -54,16 +58,19 @@ public class XtermDemoView extends VerticalLayout {
     xterm.setCursorStyle(CursorStyle.UNDERLINE);
     xterm.setBellStyle(BellStyle.SOUND);
 
-    xterm.setSizeFull();
+    baseXterm.setSizeFull();
 
-    xterm.setCopySelection(true);
-    xterm.setUseSystemClipboard(UseSystemClipboard.READWRITE);
-    xterm.setPasteWithMiddleClick(true);
-    xterm.setPasteWithRightClick(true);
+    baseXterm.setCopySelection(true);
+    baseXterm.setUseSystemClipboard(UseSystemClipboard.READWRITE);
+    baseXterm.setPasteWithMiddleClick(true);
+    baseXterm.setPasteWithRightClick(true);
 
-    TerminalHistory.extend(xterm);
+    TerminalHistory.extend(baseXterm);
 
-    xterm.addLineListener(
+    baseXterm.addDetachListener(ev -> TerminalHistory.of(baseXterm).setEnabled(false));
+    baseXterm.addAttachListener(ev -> TerminalHistory.of(baseXterm).setEnabled(true));
+
+    baseXterm.addLineListener(
         ev -> {
           String[] line = ev.getLine().toLowerCase().split("\\s+",2);
           switch (line[0]) {
@@ -118,17 +125,28 @@ public class XtermDemoView extends VerticalLayout {
         });
 
     xterm.focus();
-    xterm.fit();
-    add(xterm);
+    baseXterm.fit();
+
+    hideButton = new Button("Toggle terminal", ev -> {
+      if (getChildren().count() > 1) {
+        removeAll();
+        add(hideButton);
+      } else {
+        removeAll();
+        add(hideButton, baseXterm);
+      }
+    });
+
+    add(hideButton, baseXterm);
   }
 
   private void showHistory() {
     int index = 1;
     StringBuilder sb = new StringBuilder();
-    for (String line : TerminalHistory.of(xterm).getLines()) {
+    for (String line : TerminalHistory.of(baseXterm).getLines()) {
       sb.append(String.format("%5s  %s\n", index++, line));
     }
-    xterm.write(sb.toString());
+      baseXterm.write(sb.toString());
   }
 
 }
