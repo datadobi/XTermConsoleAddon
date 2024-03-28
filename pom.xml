@@ -4,7 +4,7 @@
 
     <groupId>com.flowingcode.addons</groupId>
     <artifactId>xterm-console</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>3.0.0-datadobi-alpha1</version>
     <name>XTerm Console Addon</name>
     <description>Integration of xterm.js for Vaadin Flow</description>
 
@@ -70,6 +70,14 @@
 			</releases>
 		</repository>
     </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>internal</id>
+            <name>mavenserver-releases</name>
+            <url>https://artifactory.datadobi.net/artifactory/ext-release-local</url>
+        </repository>
+    </distributionManagement>
 
     <dependencies>
     	<dependency>
